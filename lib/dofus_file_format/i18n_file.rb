@@ -24,21 +24,13 @@ module DofusFileFormat
     endian :big
 
     section :messages_section
-    section :table_section
+    section :table, structure: :i18n_table
 
     uint32 :some_offset
 
-    section :dictionary_section
+    section :dictionary, structure: :i18n_dictionary
 
     rest :other_data
-
-    def table
-      @table ||= I18nTable.read table_section
-    end
-
-    def dictionary
-      @dictionary ||= I18nDictionary.read dictionary_section
-    end
 
     def message_at_offset(offset, force_utf8=true)
       result = LengthTaggedString.read(
