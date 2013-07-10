@@ -1,6 +1,5 @@
 # coding: UTF-8
 require 'dofus_file_format/i18n_file'
-require 'pry'
 
 describe DofusFileFormat::I18nFile do
   %w[en fr ja].each do |language|
@@ -19,6 +18,12 @@ describe DofusFileFormat::I18nFile do
       en_file.message_numbered(12).should ==
         'Your alignment is so weak that its very survival is threatened.'
     end
+
+    it 'correctly finds message with given key' do
+      en_file.message_keyed('ui.prism.localVulnerabilityHour').should ==
+        'Vulnerability start (local time)'
+    end
+
   end
 
   describe 'with French file' do
@@ -31,6 +36,11 @@ describe DofusFileFormat::I18nFile do
       fr_file.message_numbered(12).should ==
         'Votre alignement est si faible que sa survie est menacée.'
     end
+
+    it 'correctly finds message with given key' do
+      fr_file.message_keyed('ui.prism.localVulnerabilityHour').should ==
+        'Heure de vulnérabilité locale'
+    end
   end
 
   describe 'with Japanese file' do
@@ -42,6 +52,11 @@ describe DofusFileFormat::I18nFile do
     it 'correctly finds message with given id' do
       ja_file.message_numbered(12).should ==
         '同盟のレベルが弱すぎる。生き残れないかもしれない。'
+    end
+
+    it 'correctly finds message with given key' do
+      ja_file.message_keyed('ui.prism.localVulnerabilityHour').should ==
+        '脆弱状態の時間(ローカル)'
     end
   end
 end

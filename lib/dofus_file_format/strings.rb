@@ -17,5 +17,12 @@ module DofusFileFormat
 
     include StringBasedPrimitive
   end
+
+  class LengthTaggedString < BinData::Primitive
+    uint16be :byte_count
+    string :content, read_length: :byte_count
+
+    include StringBasedPrimitive
+  end
 end
 

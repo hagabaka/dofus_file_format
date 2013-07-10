@@ -1,14 +1,7 @@
 require 'bindata'
-require 'dofus_file_format/section'
+require 'dofus_file_format/strings'
 
 module DofusFileFormat
-  class I18nMessage < BinData::Primitive
-    uint16be :byte_count
-    string :content, read_length: :byte_count
-
-    include StringBasedPrimitive
-  end
-
   class I18nTable < BinData::Array
     default_parameter read_until: :eof
 
@@ -20,24 +13,37 @@ module DofusFileFormat
     array :alternate_form_offsets, type: :uint32, initial_length: :alternate_form_count
   end
 
+  class I18nDictionary < BinData::Array
+    default_parameter read_until: :eof
+
+    length_tagged_string :message_key
+    uint32be :message_offset
+  end
+
   class I18nFile < BinData::Record
-    array :sections, type: :section, read_until: :eof
+    endian :big
 
-    def messages_section
-      sections[0]
-    end
+    section :messages_section
+    section :table_section
 
-    def table_section
-      sections[1]
-    end
+    uint32 :some_offset
+
+    section :dictionary_section
+
+    rest :other_data
 
     def table
       @table ||= I18nTable.read table_section
     end
 
+    def dictionary
+      @dictionary ||= I18nDictionary.read dictionary_section
+    end
+
     def message_at_offset(offset, force_utf8=true)
-      result =
-        I18nMessage.read(messages_section.to_s[(offset - messages_section.content.offset)..-1])
+      result = LengthTaggedString.read(
+        messages_section.to_s[(offset - messages_section.content.offset)..-1]
+      )
 
       if force_utf8
         result.force_encoding('UTF-8')
@@ -48,6 +54,11 @@ module DofusFileFormat
 
     def message_numbered(number)
       pointer = table.find {|entry| entry.message_number == number}
+      message_at_offset(pointer.message_offset)
+    end
+
+    def message_keyed(key)
+      pointer = dictionary.find {|entry| entry.message_key == key}
       message_at_offset(pointer.message_offset)
     end
   end
