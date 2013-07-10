@@ -20,22 +20,21 @@ module DofusFileFormat
     uint32be :message_offset
   end
 
+  class I18nNumberList < BinData::Array
+    default_parameter read_until: :eof
+
+    uint32be
+  end
+
   class I18nFile < BinData::Record
-    endian :big
-
-    section :messages_section
+    uint32be :table_offset
+    string :all_messages, read_length: ->{table_offset - 4}
     section :table, structure: :i18n_table
-
-    uint32 :some_offset
-
     section :dictionary, structure: :i18n_dictionary
-
-    rest :other_data
+    section :message_numbers, structure: :i18n_number_list
 
     def message_at_offset(offset, force_utf8=true)
-      result = LengthTaggedString.read(
-        messages_section.to_s[(offset - messages_section.content.offset)..-1]
-      )
+      result = LengthTaggedString.read all_messages[(offset - all_messages.offset)..-1]
 
       if force_utf8
         result.force_encoding('UTF-8')

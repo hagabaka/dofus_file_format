@@ -24,6 +24,9 @@ describe DofusFileFormat::I18nFile do
         'Vulnerability start (local time)'
     end
 
+    it 'correctly loads the list of message numbers' do
+      ->{en_file.message_numbered en_file.message_numbers.first}.should_not be_nil
+    end
   end
 
   describe 'with French file' do
@@ -41,6 +44,10 @@ describe DofusFileFormat::I18nFile do
       fr_file.message_keyed('ui.prism.localVulnerabilityHour').should ==
         'Heure de vulnérabilité locale'
     end
+
+    it 'correctly loads the list of message numbers' do
+      ->{fr_file.message_numbered fr_file.message_numbers.first}.should_not be_nil
+    end
   end
 
   describe 'with Japanese file' do
@@ -57,6 +64,10 @@ describe DofusFileFormat::I18nFile do
     it 'correctly finds message with given key' do
       ja_file.message_keyed('ui.prism.localVulnerabilityHour').should ==
         '脆弱状態の時間(ローカル)'
+    end
+
+    it 'correctly loads the list of message numbers' do
+      ->{ja_file.message_numbered ja_file.message_numbers.first}.should_not be_nil
     end
   end
 end

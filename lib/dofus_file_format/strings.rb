@@ -15,7 +15,7 @@ module DofusFileFormat
     default_parameter structure: nil
 
     uint32be :byte_count
-    string :content, read_length: ->{byte_count - 4}
+    string :content, read_length: :byte_count
 
     def get
       structure = @params[:structure]
