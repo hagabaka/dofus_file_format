@@ -1,11 +1,11 @@
 # coding: UTF-8
-require 'dofus/i18n_file'
+require 'dofus_file_format/i18n_file'
 require 'pry'
 
-describe Dofus::I18n::File do
+describe DofusFileFormat::I18nFile do
   %w[en fr ja].each do |language|
     let(:"#{language}_file") do
-      Dofus::I18n::File.read(File.read("test-data/i18n_#{language}.d2i"))
+      DofusFileFormat::I18nFile.read(File.read("test-data/i18n_#{language}.d2i"))
     end
   end
 
