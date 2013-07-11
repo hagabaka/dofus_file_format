@@ -23,21 +23,21 @@ module DofusFileFormat
 
   class I18nFileStructure < BinData::Record
     uint32be :table_offset
-    skip length: ->{table_offset - 4}
+    seek offset: :table_offset
     byte_counted_array :table, type: :i18n_table_entry
     byte_counted_array :dictionary, type: :i18n_dictionary_entry
     byte_counted_array :sorted_message_numbers, type: :uint32be
   end
 
   class I18nFile
-    def initialize(file_content)
-      @file = file_content
-      @file.force_encoding('binary')
+    def initialize(file)
+      @file = file
       @data = I18nFileStructure.read @file
     end
 
     def message_at_offset(offset, force_utf8=true)
-      result = ByteCountedString.read @file[offset..-1]
+      @file.seek offset, IO::SEEK_SET
+      result = ByteCountedString.read @file
 
       if force_utf8
         result.force_encoding('UTF-8')

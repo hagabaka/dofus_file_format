@@ -34,5 +34,23 @@ module DofusFileFormat
 
     include StringBasedPrimitive
   end
+
+  class Seek < BinData::Primitive
+    mandatory_parameter :offset
+
+    private
+    def value_to_binary_string(val)
+      ''
+    end
+
+    def read_and_return_value(io)
+      io.raw_io.seek eval_parameter(:offset), IO::SEEK_SET
+      ''
+    end
+
+    def sensible_default
+      ''
+    end
+  end
 end
 
