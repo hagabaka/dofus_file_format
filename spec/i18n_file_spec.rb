@@ -27,12 +27,12 @@ describe DofusFileFormat::I18nFile do
 
     it 'correctly loads the sorted list of message numbers' do
       en_file.sorted_message_numbers.last(3).map do |number|
-        en_file.message_numbered(number).downcase
+        en_file.message_numbered(number, true)
       end.should be_ascending
     end
 
     it 'correctly uses the sorted list to find the number for a message' do
-      en_file.number_for_message('Brakmarian').should == 177
+      en_file.number_for_message('Zoth Warrior Axe').should == 45761
     end
   end
 
@@ -54,12 +54,12 @@ describe DofusFileFormat::I18nFile do
 
     it 'correctly loads the sorted list of message numbers' do
       fr_file.sorted_message_numbers.last(3).map do |number|
-        fr_file.message_numbered(number).downcase
+        fr_file.message_numbered(number, true)
       end.should be_ascending
     end
 
     it 'correctly uses the sorted list to find the number for a message' do
-      fr_file.number_for_message('Brakmarien').should == 177
+      fr_file.number_for_message('Hache du Guerrier Zoth').should == 45761
     end
   end
 
@@ -81,12 +81,12 @@ describe DofusFileFormat::I18nFile do
 
     it 'correctly loads the sorted list of message numbers' do
       ja_file.sorted_message_numbers.last(3).map do |number|
-        ja_file.message_numbered(number).downcase
+        ja_file.message_numbered(number, true)
       end.should be_ascending
     end
 
     it 'correctly uses the sorted list to find the number for a message' do
-      ja_file.number_for_message('陣営 :  ブラクマール').should == 177
+      ja_file.number_for_message('ゾス戦士の斧').should == 45761
     end
   end
 end

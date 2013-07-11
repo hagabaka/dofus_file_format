@@ -1,5 +1,6 @@
 require 'bindata'
 require 'dofus_file_format/strings'
+require 'ffi-icu'
 
 module DofusFileFormat
   class I18nTable < BinData::Array
@@ -8,9 +9,9 @@ module DofusFileFormat
     endian :big
 
     uint32 :message_number
-    uint8 :alternate_form_count
+    uint8 :normalized_form_count
     uint32 :message_offset
-    array :alternate_form_offsets, type: :uint32, initial_length: :alternate_form_count
+    array :normalized_form_offsets, type: :uint32, initial_length: :normalized_form_count
   end
 
   class I18nDictionary < BinData::Array
@@ -43,9 +44,17 @@ module DofusFileFormat
       end
     end
 
-    def message_numbered(number)
+    def message_numbered(number, normalized=false)
       pointer = table.find {|entry| entry.message_number == number}
-      message_at_offset(pointer.message_offset)
+      if normalized
+        if pointer.normalized_form_count > 0
+          message_at_offset(pointer.normalized_form_offsets[0])
+        else
+          message_at_offset(pointer.message_offset).downcase
+        end
+      else
+        message_at_offset(pointer.message_offset)
+      end
     end
 
     def message_keyed(key)
@@ -55,7 +64,7 @@ module DofusFileFormat
 
     def number_for_message(message)
       sorted_message_numbers.to_a.bsearch do |number|
-        message_numbered(number).downcase >= message.downcase
+        message_numbered(number, true) >= ICU::Normalization.normalize(message, 2).downcase
       end
     end
   end
