@@ -1,5 +1,6 @@
 require 'bindata'
 require 'dofus_file_format/common_types'
+require 'dofus_file_format/file_handler'
 require 'ffi-icu'
 
 module DofusFileFormat
@@ -28,15 +29,13 @@ module DofusFileFormat
     byte_counted_array :sorted_message_numbers, type: :uint32be
   end
 
-  class I18nFile
-    def initialize(file)
-      @file = file
-      @data = I18nFileStructure.read @file
+  class I18nFile < FileHandler
+    def file_structure
+      I18nFileStructure
     end
 
     def message_at_offset(offset, force_utf8=true)
-      @file.seek offset, IO::SEEK_SET
-      result = ByteCountedString.read @file
+      result = read_part(offset, ByteCountedString)
 
       if force_utf8
         result.force_encoding('UTF-8')
