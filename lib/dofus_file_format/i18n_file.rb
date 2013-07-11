@@ -3,15 +3,23 @@ require 'dofus_file_format/strings'
 require 'ffi-icu'
 
 module DofusFileFormat
-  class I18nTable < BinData::Array
-    default_parameter read_until: :eof
-
+  class I18nTableEntry < BinData::Record
     endian :big
 
     uint32 :message_number
-    uint8 :normalized_form_count
+    uint8 :normalization_form_specified
     uint32 :message_offset
-    array :normalized_form_offsets, type: :uint32, initial_length: :normalized_form_count
+    uint32 :normalization_form_offset, onlyif: :normalization_form_specified?
+
+    def normalization_form_specified?
+      normalization_form_specified.nonzero?
+    end
+  end
+
+  class I18nTable < BinData::Array
+    default_parameter read_until: :eof
+
+    i18n_table_entry
   end
 
   class I18nDictionary < BinData::Array
@@ -44,11 +52,15 @@ module DofusFileFormat
       end
     end
 
+    def table_entry_numbered(number)
+      table.find {|entry| entry.message_number == number}
+    end
+
     def message_numbered(number, normalized=false)
-      pointer = table.find {|entry| entry.message_number == number}
+      pointer = table_entry_numbered(number)
       if normalized
-        if pointer.normalized_form_count > 0
-          message_at_offset(pointer.normalized_form_offsets[0])
+        if pointer.normalization_form_specified?
+          message_at_offset(pointer.normalization_form_offset)
         else
           message_at_offset(pointer.message_offset).downcase
         end
