@@ -31,7 +31,7 @@ module DofusFileFormat
     string :all_messages, read_length: ->{table_offset - 4}
     section :table, structure: :i18n_table
     section :dictionary, structure: :i18n_dictionary
-    section :message_numbers, structure: :i18n_number_list
+    section :sorted_message_numbers, structure: :i18n_number_list
 
     def message_at_offset(offset, force_utf8=true)
       result = LengthTaggedString.read all_messages[(offset - all_messages.offset)..-1]
@@ -51,6 +51,12 @@ module DofusFileFormat
     def message_keyed(key)
       pointer = dictionary.find {|entry| entry.message_key == key}
       message_at_offset(pointer.message_offset)
+    end
+
+    def number_for_message(message)
+      sorted_message_numbers.to_a.bsearch do |number|
+        message_numbered(number).downcase >= message.downcase
+      end
     end
   end
 end

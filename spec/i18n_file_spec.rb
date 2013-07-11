@@ -1,5 +1,6 @@
 # coding: UTF-8
 require 'dofus_file_format/i18n_file'
+require 'nuggets/array/monotone'
 
 describe DofusFileFormat::I18nFile do
   %w[en fr ja].each do |language|
@@ -24,8 +25,14 @@ describe DofusFileFormat::I18nFile do
         'Vulnerability start (local time)'
     end
 
-    it 'correctly loads the list of message numbers' do
-      ->{en_file.message_numbered en_file.message_numbers.first}.should_not be_nil
+    it 'correctly loads the sorted list of message numbers' do
+      en_file.sorted_message_numbers.last(3).map do |number|
+        en_file.message_numbered(number).downcase
+      end.should be_ascending
+    end
+
+    it 'correctly uses the sorted list to find the number for a message' do
+      en_file.number_for_message('Brakmarian').should == 177
     end
   end
 
@@ -45,8 +52,14 @@ describe DofusFileFormat::I18nFile do
         'Heure de vulnérabilité locale'
     end
 
-    it 'correctly loads the list of message numbers' do
-      ->{fr_file.message_numbered fr_file.message_numbers.first}.should_not be_nil
+    it 'correctly loads the sorted list of message numbers' do
+      fr_file.sorted_message_numbers.last(3).map do |number|
+        fr_file.message_numbered(number).downcase
+      end.should be_ascending
+    end
+
+    it 'correctly uses the sorted list to find the number for a message' do
+      fr_file.number_for_message('Brakmarien').should == 177
     end
   end
 
@@ -66,8 +79,14 @@ describe DofusFileFormat::I18nFile do
         '脆弱状態の時間(ローカル)'
     end
 
-    it 'correctly loads the list of message numbers' do
-      ->{ja_file.message_numbered ja_file.message_numbers.first}.should_not be_nil
+    it 'correctly loads the sorted list of message numbers' do
+      ja_file.sorted_message_numbers.last(3).map do |number|
+        ja_file.message_numbered(number).downcase
+      end.should be_ascending
+    end
+
+    it 'correctly uses the sorted list to find the number for a message' do
+      ja_file.number_for_message('陣営 :  ブラクマール').should == 177
     end
   end
 end
