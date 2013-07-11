@@ -3,7 +3,7 @@ require 'bindata'
 module DofusFileFormat
   module StringBasedPrimitive
     def get
-      content
+      content.snapshot
     end
 
     def set(v)

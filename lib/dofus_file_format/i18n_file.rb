@@ -30,6 +30,25 @@ module DofusFileFormat
   end
 
   class I18nFile < FileHandler
+    def initialize(*arguments)
+      super *arguments
+
+      @message_offset = {}
+      @normalization_form_offset = {}
+      @data.table.each do |entry|
+        @message_offset[entry.message_number.value] = entry.message_offset
+        if entry.normalization_form_specified?
+          @normalization_form_offset[entry.message_number.value] =
+            entry.normalization_form_offset
+        end
+      end
+
+      @key_offset = {}
+      @data.dictionary.each do |entry|
+        @key_offset[entry.message_key.value] = entry.message_offset
+      end
+    end
+
     def file_structure
       I18nFileStructure
     end
@@ -44,26 +63,17 @@ module DofusFileFormat
       end
     end
 
-    def table_entry_numbered(number)
-      @data.table.find {|entry| entry.message_number == number}
-    end
-
     def message_numbered(number, normalized=false)
-      pointer = table_entry_numbered(number)
       if normalized
-        if pointer.normalization_form_specified?
-          message_at_offset(pointer.normalization_form_offset)
-        else
-          message_at_offset(pointer.message_offset).downcase
-        end
+        offset = @normalization_form_offset[number] || @message_offset[number]
+        message_at_offset(offset).downcase
       else
-        message_at_offset(pointer.message_offset)
+        message_at_offset(@message_offset[number])
       end
     end
 
     def message_keyed(key)
-      pointer = @data.dictionary.find {|entry| entry.message_key == key}
-      message_at_offset(pointer.message_offset)
+      message_at_offset(@key_offset[key])
     end
 
     def sorted_message_numbers
