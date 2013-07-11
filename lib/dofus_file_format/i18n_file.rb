@@ -21,15 +21,23 @@ module DofusFileFormat
     uint32be :message_offset
   end
 
-  class I18nFile < BinData::Record
+  class I18nFileStructure < BinData::Record
     uint32be :table_offset
-    string :all_messages, read_length: ->{table_offset - 4}
+    skip length: ->{table_offset - 4}
     byte_counted_array :table, type: :i18n_table_entry
     byte_counted_array :dictionary, type: :i18n_dictionary_entry
     byte_counted_array :sorted_message_numbers, type: :uint32be
+  end
+
+  class I18nFile
+    def initialize(file_content)
+      @file = file_content
+      @file.force_encoding('binary')
+      @data = I18nFileStructure.read @file
+    end
 
     def message_at_offset(offset, force_utf8=true)
-      result = ByteCountedString.read all_messages[(offset - all_messages.offset)..-1]
+      result = ByteCountedString.read @file[offset..-1]
 
       if force_utf8
         result.force_encoding('UTF-8')
@@ -39,7 +47,7 @@ module DofusFileFormat
     end
 
     def table_entry_numbered(number)
-      table.find {|entry| entry.message_number == number}
+      @data.table.find {|entry| entry.message_number == number}
     end
 
     def message_numbered(number, normalized=false)
@@ -56,12 +64,16 @@ module DofusFileFormat
     end
 
     def message_keyed(key)
-      pointer = dictionary.find {|entry| entry.message_key == key}
+      pointer = @data.dictionary.find {|entry| entry.message_key == key}
       message_at_offset(pointer.message_offset)
     end
 
+    def sorted_message_numbers
+      @data.sorted_message_numbers.to_a
+    end
+
     def number_for_message(message)
-      sorted_message_numbers.to_a.bsearch do |number|
+      sorted_message_numbers.bsearch do |number|
         message_numbered(number, true) >= ICU::Normalization.normalize(message, 2).downcase
       end
     end
