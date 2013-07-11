@@ -52,5 +52,10 @@ module DofusFileFormat
       ''
     end
   end
+
+  class SeekOffset < BinData::Record
+    uint32be :target
+    seek offset: :target
+  end
 end
 

@@ -22,8 +22,7 @@ module DofusFileFormat
   end
 
   class I18nFileStructure < BinData::Record
-    uint32be :table_offset
-    seek offset: :table_offset
+    seek_offset
     byte_counted_array :table, type: :i18n_table_entry
     byte_counted_array :dictionary, type: :i18n_dictionary_entry
     byte_counted_array :sorted_message_numbers, type: :uint32be
