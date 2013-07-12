@@ -45,6 +45,7 @@ module DofusFileFormat
     byte_counted_array :table, type: :i18n_table_entry
     byte_counted_array :dictionary, type: :i18n_dictionary_entry
     byte_counted_array :sorted_message_numbers, type: :uint32be
+    rest :rest
   end
 
   class I18nFile < FileHandler

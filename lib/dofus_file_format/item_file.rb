@@ -78,11 +78,11 @@ module DofusFileFormat
 
     byte_counted_array :all_properties, type: :property_list_entry
     byte_counted_array :all_item_numbers, type: :uint32be
+
+    rest :rest
   end
 
   class ItemFile < FileHandler
-    attr_reader :data
-
     def initialize(*arguments)
       super *arguments
 

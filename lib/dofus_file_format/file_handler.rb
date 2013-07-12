@@ -1,5 +1,7 @@
 module DofusFileFormat
   class FileHandler
+    attr_reader :data
+
     def initialize(options)
       options.respond_to? :each_pair or
         raise ArgumentError, 'An option hash is required'
