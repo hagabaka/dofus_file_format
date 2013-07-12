@@ -5,7 +5,7 @@ require 'nuggets/array/monotone'
 describe DofusFileFormat::I18nFile do
   %w[en fr ja].each do |language|
     let(:"#{language}_file") do
-      DofusFileFormat::I18nFile.new File.open "test-data/i18n_#{language}.d2i"
+      DofusFileFormat::I18nFile.new file: File.open("test-data/i18n_#{language}.d2i")
     end
   end
 

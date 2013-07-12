@@ -1,7 +1,15 @@
 module DofusFileFormat
   class FileHandler
-    def initialize(file)
-      @file = file
+    def initialize(options)
+      options.each_pair do |key, value|
+        instance_variable_set :"@#{key}", value
+      end
+
+      @options = options
+
+      unless @file
+        raise ArgumentError, 'The file parameter is required'
+      end
       @data = file_structure.read @file
     end
 
