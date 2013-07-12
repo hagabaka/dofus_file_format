@@ -1,16 +1,6 @@
 require 'bindata'
 
 module DofusFileFormat
-  module StringBasedPrimitive
-    def get
-      content.snapshot
-    end
-
-    def set(v)
-      self.content = v
-    end
-  end
-
   class ByteCountedArray < BinData::Primitive
     default_parameter type: :uint8be
 
@@ -32,7 +22,13 @@ module DofusFileFormat
     uint16be :byte_count
     string :content, read_length: :byte_count
 
-    include StringBasedPrimitive
+    def get
+      content.snapshot
+    end
+
+    def set(v)
+      self.content = v
+    end
   end
 
   class Seek < BinData::Primitive
