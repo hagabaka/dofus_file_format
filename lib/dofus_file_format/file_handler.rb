@@ -1,6 +1,9 @@
 module DofusFileFormat
   class FileHandler
     def initialize(options)
+      options.respond_to? :each_pair or
+        raise ArgumentError, 'An option hash is required'
+
       options.each_pair do |key, value|
         instance_variable_set :"@#{key}", value
       end
