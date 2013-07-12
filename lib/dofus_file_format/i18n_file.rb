@@ -28,7 +28,11 @@ module DofusFileFormat
     uint32be :message_number
 
     def get
-      @params[:i18n].message_numbered(self.message_number.snapshot)
+      begin
+        @params[:i18n].message_numbered(message_number.snapshot)
+      rescue ArgumentError
+        message_number
+      end
     end
 
     def set(v)
@@ -78,8 +82,11 @@ module DofusFileFormat
     end
 
     def message_numbered(number, normalized=false)
+      offset = @message_offset[number]
+      raise ArgumentError, 'Not a message number' unless offset
+
       if normalized
-        offset = @normalization_form_offset[number] || @message_offset[number]
+        offset = @normalization_form_offset[number] || offset
         message_at_offset(offset).downcase
       else
         message_at_offset(@message_offset[number])
