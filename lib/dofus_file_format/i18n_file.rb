@@ -22,6 +22,20 @@ module DofusFileFormat
     uint32be :message_offset
   end
 
+  class AutoFetchingMessageNumber < BinData::Primitive
+    mandatory_parameter :i18n
+
+    uint32be :message_number
+
+    def get
+      @params[:i18n].message_numbered(self.message_number.snapshot)
+    end
+
+    def set(v)
+      self.message_number = v
+    end
+  end
+
   class I18nFileStructure < BinData::Record
     seek_offset
     byte_counted_array :table, type: :i18n_table_entry
