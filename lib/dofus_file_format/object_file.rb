@@ -106,9 +106,9 @@ module DofusFileFormat
         integer: :uint32,
         boolean: :uint8,
         criteria: :byte_counted_string,
-        price: [:array, type: :uint8, initial_length: 8],
         array: :counted_int_array,
         extended: :counted_int_array
+        price: :double_be,
       }
 
       if @i18n_file
