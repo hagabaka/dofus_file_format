@@ -65,6 +65,21 @@ module DofusFileFormat
     uint32be :message_number
   end
 
+  class CountedIntArray < BinData::Primitive
+    endian :big
+    uint32 :element_count
+    array :elements, type: :uint32, initial_length: :element_count
+
+    def get
+      elements
+    end
+
+    def set(v)
+      self.count = v.length
+      self.elements = v
+    end
+  end
+
   class ItemFileStructure < BinData::Record
     endian :big
 
@@ -92,8 +107,8 @@ module DofusFileFormat
         boolean: :uint8,
         criteria: :byte_counted_string,
         price: [:array, type: :uint8, initial_length: 8],
-        array: :uint32,
-        extended: :uint32
+        array: :counted_int_array,
+        extended: :counted_int_array
       }
 
       if @i18n_file
