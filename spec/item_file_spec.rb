@@ -12,7 +12,7 @@ describe DofusFileFormat::ItemFile do
     end
 
     it 'correctly looks up an item by number' do
-      @item_file.item_numbered(40)._realWeight.should == 20
+      @item_file.object_numbered(40)._realWeight.should == 20
     end
   end
 
@@ -24,7 +24,7 @@ describe DofusFileFormat::ItemFile do
     end
 
     it 'correctly shows item names' do
-      @item_file_with_i18n.item_numbered(400)._nameId.should == 'Barley'
+      @item_file_with_i18n.object_numbered(400)._nameId.should == 'Barley'
     end
 
     it 'correctly finds an item by name' do
