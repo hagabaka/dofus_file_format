@@ -127,6 +127,19 @@ module DofusFileFormat
         @class_structures[schema.class_number] =
           BinData::Struct.new endian: :big, fields: fields
       end
+
+      @object_table = {}
+      @object_name_table = {}
+      @data.objects.each do |entry|
+        offset = entry.object_offset
+        @object_table[entry.object_number.snapshot] = offset
+
+        object = object_at_offset(offset)
+        if object.respond_to? :_nameId
+          id = object._nameId.message_number.snapshot
+          @object_name_table[id] = offset
+        end
+      end
     end
 
     def file_structure
@@ -140,6 +153,10 @@ module DofusFileFormat
 
     def object_numbered(number)
       object_at_offset @object_table[number]
+    end
+
+    def object_named(name)
+      object_at_offset @object_name_table[i18n_file.number_for_message(name)]
     end
 
     def i18n_file
