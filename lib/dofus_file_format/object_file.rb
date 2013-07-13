@@ -51,8 +51,7 @@ module DofusFileFormat
     byte_counted_string :class_name
     byte_counted_string :namespace
 
-    uint32 :property_count
-    array :properties, type: :property, initial_length: :property_count
+    counted_array :properties, type: :property
   end
 
   class ObjectEntry < BinData::Record
@@ -65,21 +64,6 @@ module DofusFileFormat
     uint32be :message_number
   end
 
-  class CountedIntArray < BinData::Primitive
-    endian :big
-    uint32 :element_count
-    array :elements, type: :uint32, initial_length: :element_count
-
-    def get
-      elements
-    end
-
-    def set(v)
-      self.count = v.length
-      self.elements = v
-    end
-  end
-
   class ObjectFileStructure < BinData::Record
     endian :big
 
@@ -88,8 +72,7 @@ module DofusFileFormat
 
     byte_counted_array :objects, type: :object_entry
 
-    uint32 :class_count
-    array :classes, type: :class_schema, initial_length: :class_count
+    counted_array :classes, type: :class_schema
 
     byte_counted_array :all_properties, type: :property_list_entry
     byte_counted_array :all_object_numbers, type: :uint32be
@@ -103,12 +86,12 @@ module DofusFileFormat
 
       @type_mapping = {
         message_number: :message_number,
-        integer: :uint32,
+        integer: :int32,
         boolean: :uint8,
         criteria: :byte_counted_string,
-        array: :counted_int_array,
-        extended: :counted_int_array
         price: :double_be,
+        array: :uint32be,
+        extended: :uint32be
       }
 
       if @i18n_file

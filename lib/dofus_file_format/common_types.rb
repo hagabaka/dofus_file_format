@@ -18,6 +18,24 @@ module DofusFileFormat
     end
   end
 
+  class CountedArray < BinData::BasePrimitive
+    mandatory_parameter :type
+
+    private
+    def value_to_binary_string(val)
+      BinData::Uint32be.new(val.length).to_binary_string + val.map(&:to_binary_string).join
+    end
+
+    def read_and_return_value(io)
+      length = BinData::Uint32be.read io
+      Array.new(length) {BinData::RegisteredClasses.lookup(@params[:type]).read io}
+    end
+
+    def sensible_default
+      []
+    end
+  end
+
   class ByteCountedString < BinData::Primitive
     uint16be :byte_count
     string :content, read_length: :byte_count
