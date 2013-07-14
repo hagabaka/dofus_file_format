@@ -23,12 +23,16 @@ module DofusFileFormat
 
     private
     def value_to_binary_string(val)
-      BinData::Uint32be.new(val.length).to_binary_string + val.map(&:to_binary_string).join
+      BinData::Uint32be.new(val.length).to_binary_s + val.map(&:to_binary_s).join
     end
 
     def read_and_return_value(io)
       length = BinData::Uint32be.read io
-      Array.new(length) {BinData::RegisteredClasses.lookup(@params[:type]).read io}
+      type = @params[:type]
+      unless type.respond_to? :read
+        type = BinData::RegisteredClasses.lookup(type)
+      end
+      Array.new(length) {type.read io}
     end
 
     def sensible_default
