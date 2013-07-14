@@ -112,21 +112,26 @@ module DofusFileFormat
       end
 
       @object_table = {}
-      @object_name_table = {}
       @data.objects.each do |entry|
         offset = entry.object_offset
         @object_table[entry.object_number.snapshot] = offset
-
-        object = object_at_offset(offset)
-        if object.respond_to? :_nameId
-          id = object._nameId.message_number.snapshot
-          @object_name_table[id] = offset
-        end
       end
     end
 
     def file_structure
       ObjectFileStructure
+    end
+
+    def object_name_table
+      @object_name_table ||= {}.tap do |table|
+        @object_table.each_pair do |object_number, offset|
+          object = object_at_offset(offset)
+          if object.respond_to? :_nameId
+            id = object._nameId.message_number.snapshot
+            table[id] = offset
+          end
+        end
+      end
     end
 
     def object_at_offset(offset)
@@ -139,7 +144,7 @@ module DofusFileFormat
     end
 
     def object_named(name)
-      object_at_offset @object_name_table[i18n_file.number_for_message(name)]
+      object_at_offset object_name_table[i18n_file.number_for_message(name)]
     end
 
     def i18n_file
