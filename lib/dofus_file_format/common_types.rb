@@ -32,7 +32,7 @@ module DofusFileFormat
       unless type.respond_to? :read
         type = BinData::RegisteredClasses.lookup(type)
       end
-      Array.new(length) {type.read io}
+      Array.new(length) {type.new.read io}
     end
 
     def sensible_default

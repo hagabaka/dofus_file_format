@@ -86,7 +86,7 @@ module DofusFileFormat
 
       @type_mapping = {
         message_number: :message_number,
-        integer: :int32,
+        integer: :int32be,
         boolean: :uint8,
         string: :byte_counted_string,
         double: :double_be,
@@ -98,17 +98,37 @@ module DofusFileFormat
         @type_mapping[:message_number] = [:auto_fetching_message_number, i18n: @i18n_file]
       end
 
-      @class_structures = {}
-      @data.classes.each do |schema|
-        name = BinData::RegisteredClasses.underscore_name schema.class_name
+      @class_structures = {0 => :uint32be}
+      @data.classes.sort_by(&:class_number).each do |schema|
         fields = schema.properties.map do |entry|
           name = "_#{entry.name}"
-          (mapped_type, *arguments) = [* @type_mapping[entry.type.value]]
-          [mapped_type, name, *arguments]
+          (mapped_type, *type_arguments) = [* @type_mapping[entry.type.value]]
+
+          if entry.type.value == :vector
+
+            case unmapped_element_type= entry.element_type.type.value
+            when *@type_mapping.keys
+              element_type = @type_mapping[unmapped_element_type]
+            when *@class_structures.keys
+              @generic_struct ||= BinData::Struct.new fields:
+                [[:uint32be, :class_number],
+                 [:choice, :property, choices: @class_structures, selection: :class_number]]
+              element_type = @generic_struct
+            else
+              raise NotImplementedError, 'Unable to handle type'
+            end
+            mapped_type = :counted_array
+            type_arguments = [type: element_type]
+          end
+
+          mapped_type or raise NotImplementedError, 'Unable to handle type'
+
+          [mapped_type, name, *type_arguments]
         end
 
+        name = BinData::RegisteredClasses.underscore_name schema.class_name
         @class_structures[schema.class_number] =
-          BinData::Struct.new endian: :big, fields: fields
+          BinData::Struct.new name: name, endian: :big, fields: fields
       end
 
       @object_table = {}
