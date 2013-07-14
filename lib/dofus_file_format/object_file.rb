@@ -4,16 +4,16 @@ require 'dofus_file_format/file_handler'
 
 module DofusFileFormat
   class TypeTag < BinData::Primitive
-    uint32be :type_id
+    int32be :type_id
 
     ID_TO_NAME = {
-      0xff_ff_ff_fb => :message_number,
-      0xff_ff_ff_ff => :integer,
-      0xff_ff_ff_fe => :boolean,
-      0xff_ff_ff_fd => :criteria,
-      0xff_ff_ff_fc => :price,
-      0xff_ff_ff_fa => :array,
-      0xff_ff_ff_9d => :extended
+      -5 => :message_number,
+      -1 => :integer,
+      -2 => :boolean,
+      -3 => :string,
+      -4 => :double,
+      -6 => :unsigned_integer,
+      -99 => :vector
     }
     NAME_TO_ID = ID_TO_NAME.invert
 
@@ -29,10 +29,10 @@ module DofusFileFormat
   class Property < BinData::Record
     byte_counted_string :name
     type_tag :type
-    property :extended_type, onlyif: :extended_type?
+    property :element_type, onlyif: :vector?
 
-    def extended_type?
-      type == :extended
+    def vector?
+      type == :vector
     end
   end
 
@@ -88,10 +88,10 @@ module DofusFileFormat
         message_number: :message_number,
         integer: :int32,
         boolean: :uint8,
-        criteria: :byte_counted_string,
-        price: :double_be,
-        array: :uint32be,
-        extended: :uint32be
+        string: :byte_counted_string,
+        double: :double_be,
+        unsigned_integer: :uint32be,
+        vector: :uint32be
       }
 
       if @i18n_file
