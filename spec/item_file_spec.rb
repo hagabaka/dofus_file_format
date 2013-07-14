@@ -14,6 +14,13 @@ describe DofusFileFormat::ObjectFile do
     it 'correctly looks up an item by number' do
       @object_file.object_numbered(40)._realWeight.should == 20
     end
+
+    it "correctly parses an item's effects" do
+      @object_file.object_numbered(6461)._possibleEffects.should be_any {|element|
+        effect = element.property
+        effect._effectId == 111 && effect._diceNum == 1 && effect._diceSide == 0
+      }
+    end
   end
 
   describe 'initialized with i18n file' do
