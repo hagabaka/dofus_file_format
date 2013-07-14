@@ -36,7 +36,7 @@ module DofusFileFormat
     end
 
     def set(v)
-      self.message_number = v
+      self.message_number = @params[:i18n].number_for_message v
     end
   end
 
