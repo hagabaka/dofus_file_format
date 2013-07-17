@@ -16,8 +16,7 @@ describe DofusFileFormat::ObjectFile do
     end
 
     it "correctly parses an item's effects" do
-      @object_file.object_numbered(6461)._possibleEffects.should be_any {|element|
-        effect = element.property
+      @object_file.object_numbered(6461)._possibleEffects.should be_any {|effect|
         effect._effectId == 111 && effect._diceNum == 1 && effect._diceSide == 0
       }
     end

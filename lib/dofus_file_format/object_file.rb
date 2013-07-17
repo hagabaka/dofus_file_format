@@ -1,38 +1,17 @@
 require 'bindata'
 require 'dofus_file_format/common_types'
+require 'dofus_file_format/dynamic_types'
 require 'dofus_file_format/file_handler'
 
 module DofusFileFormat
-  class TypeTag < BinData::Primitive
-    int32be :type_id
-
-    ID_TO_NAME = {
-      -5 => :message_number,
-      -1 => :integer,
-      -2 => :boolean,
-      -3 => :string,
-      -4 => :double,
-      -6 => :unsigned_integer,
-      -99 => :vector
-    }
-    NAME_TO_ID = ID_TO_NAME.invert
-
-    def get
-      ID_TO_NAME[type_id] || type_id
-    end
-
-    def set(v)
-      self.type_id = NAME_TO_ID[v] || v
-    end
-  end
-
   class Property < BinData::Record
+    VECTOR_TYPE = -99
     byte_counted_string :name
-    type_tag :type
+    int32be :type
     property :element_type, onlyif: :vector?
 
     def vector?
-      type == :vector
+      type == VECTOR_TYPE
     end
   end
 
@@ -40,7 +19,7 @@ module DofusFileFormat
     endian :big
     byte_counted_string :name
     uint32 :n1
-    type_tag :type
+    int32be :type
     uint32 :n3
   end
 
@@ -84,52 +63,9 @@ module DofusFileFormat
     def initialize(*arguments)
       super *arguments
 
-      @type_mapping = {
-        message_number: :message_number,
-        integer: :int32be,
-        boolean: :uint8,
-        string: :byte_counted_string,
-        double: :double_be,
-        unsigned_integer: :uint32be,
-        vector: :uint32be
-      }
+      @dynamic_type_manager = DynamicTypeManager.new(@i18n_file)
 
-      if @i18n_file
-        @type_mapping[:message_number] = [:auto_fetching_message_number, i18n: @i18n_file]
-      end
-
-      @class_structures = {0 => :uint32be}
-      @data.classes.sort_by(&:class_number).each do |schema|
-        fields = schema.properties.map do |entry|
-          name = "_#{entry.name}"
-          (mapped_type, *type_arguments) = [* @type_mapping[entry.type.value]]
-
-          if entry.type.value == :vector
-
-            case unmapped_element_type= entry.element_type.type.value
-            when *@type_mapping.keys
-              element_type = @type_mapping[unmapped_element_type]
-            when *@class_structures.keys
-              @generic_struct ||= BinData::Struct.new fields:
-                [[:uint32be, :class_number],
-                 [:choice, :property, choices: @class_structures, selection: :class_number]]
-              element_type = @generic_struct
-            else
-              raise NotImplementedError, 'Unable to handle type'
-            end
-            mapped_type = :counted_array
-            type_arguments = [type: element_type]
-          end
-
-          mapped_type or raise NotImplementedError, 'Unable to handle type'
-
-          [mapped_type, name, *type_arguments]
-        end
-
-        name = BinData::RegisteredClasses.underscore_name schema.class_name
-        @class_structures[schema.class_number] =
-          BinData::Struct.new name: name, endian: :big, fields: fields
-      end
+      @dynamic_type_manager.add_types @data.classes
 
       @object_table = {}
       @data.objects.each do |entry|
@@ -155,8 +91,7 @@ module DofusFileFormat
     end
 
     def object_at_offset(offset)
-      class_number = read_part(offset, BinData::Uint32be)
-      read_part(offset + 4, @class_structures[class_number])
+      read_part(offset, @dynamic_type_manager.object_reader)
     end
 
     def object_numbered(number)
