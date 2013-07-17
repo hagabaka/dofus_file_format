@@ -1,7 +1,7 @@
 require 'bindata'
 require 'dofus_file_format/common_types'
 require 'dofus_file_format/file_handler'
-require 'ffi-icu'
+require 'unicode'
 
 module DofusFileFormat
   class I18nTableEntry < BinData::Record
@@ -104,7 +104,7 @@ module DofusFileFormat
 
     def number_for_message(message)
       sorted_message_numbers.bsearch do |number|
-        message_numbered(number, true) >= ICU::Normalization.normalize(message, 2).downcase
+        Unicode.strcmp Unicode.downcase(message), message_numbered(number, true)
       end
     end
   end
