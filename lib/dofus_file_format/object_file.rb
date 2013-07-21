@@ -33,12 +33,6 @@ module DofusFileFormat
     counted_array :properties, type: :property
   end
 
-  class ObjectEntry < BinData::Record
-    endian :big
-    uint32 :object_number
-    uint32 :object_offset
-  end
-
   class MessageNumber < BinData::Record
     uint32be :message_number
   end
@@ -49,7 +43,7 @@ module DofusFileFormat
     string :magic, read_length: 3
     seek_offset
 
-    byte_counted_array :objects, type: :object_entry
+    byte_counted_hash_table :objects, key_type: :uint32be, value_type: :uint32be
 
     counted_array :classes, type: :class_schema
 
@@ -66,12 +60,6 @@ module DofusFileFormat
       @dynamic_type_manager = DynamicTypeManager.new(@i18n_file)
 
       @dynamic_type_manager.add_types @data.classes
-
-      @object_table = {}
-      @data.objects.each do |entry|
-        offset = entry.object_offset
-        @object_table[entry.object_number.snapshot] = offset
-      end
     end
 
     def file_structure
@@ -80,7 +68,7 @@ module DofusFileFormat
 
     def object_name_table
       @object_name_table ||= {}.tap do |table|
-        @object_table.each_pair do |object_number, offset|
+        @data.objects.value.each_pair do |object_number, offset|
           object = object_at_offset(offset)
           if object.respond_to? :_nameId
             id = object._nameId.message_number.snapshot
@@ -95,7 +83,7 @@ module DofusFileFormat
     end
 
     def object_numbered(number)
-      object_at_offset @object_table[number]
+      object_at_offset @data.objects.value[number]
     end
 
     def object_named(name)

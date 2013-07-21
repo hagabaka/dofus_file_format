@@ -4,10 +4,9 @@ require 'dofus_file_format/file_handler'
 require 'unicode'
 
 module DofusFileFormat
-  class I18nTableEntry < BinData::Record
+  class MessageEntry < BinData::Record
     endian :big
 
-    uint32 :message_number
     uint8 :normalization_form_specified
     uint32 :message_offset
     uint32 :normalization_form_offset, onlyif: :normalization_form_specified?
@@ -15,11 +14,6 @@ module DofusFileFormat
     def normalization_form_specified?
       normalization_form_specified.nonzero?
     end
-  end
-
-  class I18nDictionaryEntry < BinData::Record
-    byte_counted_string :message_key
-    uint32be :message_offset
   end
 
   class AutoFetchingMessageNumber < BinData::Primitive
@@ -42,32 +36,14 @@ module DofusFileFormat
 
   class I18nFileStructure < BinData::Record
     seek_offset
-    byte_counted_array :table, type: :i18n_table_entry
-    byte_counted_array :dictionary, type: :i18n_dictionary_entry
+    byte_counted_hash_table :messages, key_type: :uint32be, value_type: :message_entry
+    byte_counted_hash_table :keyed_messages,
+      key_type: :byte_counted_string, value_type: :uint32be
     byte_counted_array :sorted_message_numbers, type: :uint32be
     rest :rest
   end
 
   class I18nFile < FileHandler
-    def initialize(*arguments)
-      super *arguments
-
-      @message_offset = {}
-      @normalization_form_offset = {}
-      @data.table.each do |entry|
-        @message_offset[entry.message_number.value] = entry.message_offset
-        if entry.normalization_form_specified?
-          @normalization_form_offset[entry.message_number.value] =
-            entry.normalization_form_offset
-        end
-      end
-
-      @key_offset = {}
-      @data.dictionary.each do |entry|
-        @key_offset[entry.message_key.value] = entry.message_offset
-      end
-    end
-
     def file_structure
       I18nFileStructure
     end
@@ -83,19 +59,24 @@ module DofusFileFormat
     end
 
     def message_numbered(number, normalized=false)
-      offset = @message_offset[number]
-      raise ArgumentError, 'Not a message number' unless offset
+      entry = @data.messages.value[number]
+      raise ArgumentError, 'Not a message number' unless entry
 
       if normalized
-        offset = @normalization_form_offset[number] || offset
-        message_at_offset(offset).downcase
+        offset =
+          if entry.normalization_form_specified?
+            entry.normalization_form_offset
+          else
+            entry.message_offset
+          end
+        Unicode.downcase(message_at_offset(offset))
       else
-        message_at_offset(@message_offset[number])
+        message_at_offset(entry.message_offset)
       end
     end
 
     def message_keyed(key)
-      message_at_offset(@key_offset[key])
+      message_at_offset(@data.keyed_messages.value[key])
     end
 
     def sorted_message_numbers
