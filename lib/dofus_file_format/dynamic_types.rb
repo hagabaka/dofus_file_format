@@ -2,6 +2,28 @@ require 'bindata'
 require 'dofus_file_format/i18n_file'
 
 module DofusFileFormat
+  class MessageNumber < BinData::Record
+    uint32be :message_number
+  end
+
+  class AutoFetchingMessageNumber < BinData::Primitive
+    mandatory_parameter :i18n
+
+    uint32be :message_number
+
+    def get
+      begin
+        @params[:i18n].message_numbered(message_number.snapshot)
+      rescue ArgumentError
+        message_number
+      end
+    end
+
+    def set(v)
+      self.message_number = @params[:i18n].number_for_message v
+    end
+  end
+
   class DynamicTypeManager
     attr_reader :simple_types
 

@@ -33,10 +33,6 @@ module DofusFileFormat
     counted_array :properties, type: :property
   end
 
-  class MessageNumber < BinData::Record
-    uint32be :message_number
-  end
-
   class ObjectFileStructure < BinData::Record
     endian :big
 
