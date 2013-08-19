@@ -77,7 +77,7 @@ describe DofusFileFormat::I18nFile do
 
     it 'correctly finds message with given key' do
       @ja_file.message_keyed('ui.prism.localVulnerabilityHour').should ==
-        '脆弱状態の時間(ローカル)'
+        '脆弱状態の時間(現地時間)'
     end
 
     it 'correctly loads the sorted list of message numbers' do
