@@ -24,8 +24,34 @@ module DofusFileFormat
     end
   end
 
+  class ObjectReader < BinData::BasePrimitive
+    mandatory_parameter :dynamic_type_manager
+
+    private
+    def dynamic_types
+      @params[:dynamic_type_manager].dynamic_types
+    end
+
+    def value_to_binary_string(val)
+      class_number = dynamic_types.key(val.class)
+      class_number or raise ArgumentError,
+        'The type must be registered with the DynamicTypeManager'
+      BinData::Uint32be.new(class_number).to_binary_s + val.to_binary_s
+    end
+
+    def read_and_return_value(io)
+      class_number = BinData::Uint32be.read(io)
+      dynamic_types[class_number].new.read(io)
+    end
+
+    def sensible_default
+      nil
+    end
+  end
+
   class DynamicTypeManager
     attr_reader :simple_types
+    attr_reader :dynamic_types
 
     def initialize(i18n_file=nil)
       message_number_type =
@@ -51,24 +77,6 @@ module DofusFileFormat
       @simple_types.merge @dynamic_types
     end
 
-    def object_reader
-      @object_reader ||= update_object_reader
-    end
-
-    def update_object_reader
-      dynamic_types = @dynamic_types
-
-      @object_reader = Class.new(BinData::Primitive) do
-        uint32be :type_number
-
-        choice :object, choices: dynamic_types, selection: :type_number
-
-        define_method(:get) {object}
-
-        define_method(:set) {|v| self.object = v}
-      end
-    end
-
     def add_types(type_specifications)
       type_specifications.sort_by(&:class_number).each do |specification|
         type_name = specification.class_name
@@ -87,15 +95,17 @@ module DofusFileFormat
             if @simple_types.has_key? unmapped_element_type
               element_type = @simple_types[unmapped_element_type]
             elsif @dynamic_types.has_key? unmapped_element_type
-              element_type = object_reader
+              element_type = [:object_reader, dynamic_type_manager: self]
             else
               raise NotImplementedError, 'Unable to handle type'
             end
             type_arguments = [type: element_type]
 
           else
-            mapped_type = object_reader
-
+            mapped_type = :object_reader
+            type_arguments = [dynamic_type_manager: self]
+            require 'pry'
+            binding.pry
           end
 
           [mapped_type, property_name, *type_arguments]
@@ -104,8 +114,10 @@ module DofusFileFormat
         @dynamic_types[specification.class_number.value] =
           BinData::Struct.new name: type_name, fields: fields
       end
+    end
 
-      update_object_reader
+    def object_reader
+      @object_reader = ObjectReader.new dynamic_type_manager: self
     end
   end
 end

@@ -52,11 +52,11 @@ module DofusFileFormat
 
     def read_and_return_value(io)
       length = BinData::Uint32be.read io
-      type = @params[:type]
+      type, *arguments = *@params[:type]
       unless type.respond_to? :read
         type = BinData::RegisteredClasses.lookup(type)
       end
-      Array.new(length) {type.new.read io}
+      Array.new(length) {type.new(*arguments).read io}
     end
 
     def sensible_default
