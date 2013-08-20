@@ -27,6 +27,11 @@ module DofusFileFormat
       @file.seek offset, IO::SEEK_SET
       structure.read @file
     end
+
+    # The @data instance variable is too complex to print
+    def pretty_print_instance_variables
+      instance_variables - [:@data]
+    end
   end
 end
 
