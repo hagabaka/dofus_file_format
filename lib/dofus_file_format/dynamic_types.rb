@@ -64,7 +64,7 @@ module DofusFileFormat
       @simple_types = {
         -5 => message_number_type,
         -1 => :int32be,
-        -2 => :uint8,
+        -2 => :bool,
         -3 => :byte_counted_string,
         -4 => :double_be,
         -6 => :uint32be,

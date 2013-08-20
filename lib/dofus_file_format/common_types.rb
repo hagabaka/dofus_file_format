@@ -1,6 +1,18 @@
 require 'bindata'
 
 module DofusFileFormat
+  class Bool < BinData::Primitive
+    uint8 :number
+
+    def get
+      self.number == 1
+    end
+
+    def set(v)
+      self.number = v ? 1 : 0
+    end
+  end
+
   class ByteCountedArray < BinData::Primitive
     default_parameter type: :uint8be
 
