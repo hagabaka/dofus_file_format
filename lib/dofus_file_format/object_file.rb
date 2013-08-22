@@ -79,7 +79,8 @@ module DofusFileFormat
     end
 
     def object_numbered(number)
-      object_at_offset @data.objects.value[number]
+      offset = @data.objects.value[number]
+      offset && object_at_offset(@data.objects.value[number])
     end
 
     def object_named(name)
