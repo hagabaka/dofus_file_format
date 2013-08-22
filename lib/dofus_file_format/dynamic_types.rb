@@ -104,8 +104,6 @@ module DofusFileFormat
           else
             mapped_type = :object_reader
             type_arguments = [dynamic_type_manager: self]
-            require 'pry'
-            binding.pry
           end
 
           [mapped_type, property_name, *type_arguments]
