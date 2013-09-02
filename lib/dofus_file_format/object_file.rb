@@ -78,6 +78,19 @@ module DofusFileFormat
       read_part(offset, @dynamic_type_manager.object_reader)
     end
 
+    def each(&block)
+      @data.objects.value.each_pair do |object_number, _|
+        yield object_numbered(object_number)
+      end
+    end
+
+    def each_with_number(&block)
+      @data.objects.value.each_pair do |object_number, _|
+        yield object_numbered(object_number), object_number
+      end
+    end
+    include Enumerable
+
     def object_numbered(number)
       offset = @data.objects.value[number]
       offset && object_at_offset(@data.objects.value[number])
